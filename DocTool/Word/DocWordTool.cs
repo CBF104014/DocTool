@@ -10,13 +10,15 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using DocumentFormat.OpenXml.Experimental;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
+using DocumentFormat.OpenXml.Experimental;
+using DocTool.Base;
 
-namespace DocTool
+namespace DocTool.Word
 {
+
     public class DocWordTool : DocBase
     {
         private int _imageCounter { get; set; } = 0;

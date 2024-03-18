@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>LibreOfficeDocTool.framework</id>
-    <version>1.0.2</version>
+    <version>1.0.4</version>
     <title></title>
     <authors>John</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <!-- <icon>icon.png</icon> -->
-    <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
+    <projectUrl>https://github.com/CBF104014/DocTool</projectUrl>
     <description>使用LibreOffice，將word文件轉pdf以及製作word文件</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright ©  2024</copyright>

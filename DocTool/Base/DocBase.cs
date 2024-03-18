@@ -1,5 +1,4 @@
 ﻿using DocTool.Dto;
-using DocumentFormat.OpenXml.Math;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,9 +8,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DocTool
+namespace DocTool.Base
 {
-    public class DocBase
+    public class DocBase : IDocBase
     {
         /// <summary>
         /// 附件類型
@@ -41,11 +40,11 @@ namespace DocTool
         /// <summary>
         /// LibreOffice路徑
         /// </summary>
-        protected string libreOfficeAppPath { get; set; }
+        public string libreOfficeAppPath { get; set; }
         /// <summary>
         /// 暫存檔案路徑
         /// </summary>
-        protected string locationTempPath { get; set; }
+        public string locationTempPath { get; set; }
         /// <summary>
         /// 建構
         /// </summary>

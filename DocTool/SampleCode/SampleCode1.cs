@@ -1,5 +1,5 @@
 ﻿using DocTool.Dto;
-using DocumentFormat.OpenXml.Wordprocessing;
+using DocTool.Word;
 using System;
 using System.Collections.Generic;
 using System.Linq;
