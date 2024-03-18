@@ -5,10 +5,10 @@
 >libreOfficeAppPath：LibreOffice路徑位置(\LibreOfficePortable\App\libreoffice\program\soffice.exe)  
 >locationTempPath：指定文件暫時存放位置  
 ```c#
-private DocWordTool wordTool { get; set; }
+private Tool docTool { get; set; }
 public SampleCode1(string libreOfficeAppPath, string locationTempPath)
 {
-    this.wordTool = new DocWordTool(libreOfficeAppPath, locationTempPath);
+    this.docTool = new Tool(libreOfficeAppPath, locationTempPath);
 }
 ```
   .
@@ -36,7 +36,7 @@ var replaceData = new Dictionary<string, ReplaceDto>()
      ["PoVenTable"] = new ReplaceDto()
      {
          replaceType = ReplaceType.Table,
-         tableData = this.wordTool.ToXMLTable(new List<string>() { "品名", "數量", "總價" }, new List<List<string>>() { new List<string>() { "A", "1", "1500" } }),
+         tableData = this.docTool.Word.ToXMLTable(new List<string>() { "品名", "數量", "總價" }, new List<List<string>>() { new List<string>() { "A", "1", "1500" } }),
      },
      ["AppP_Table"] = new ReplaceDto()
      {
@@ -49,8 +49,8 @@ var replaceData = new Dictionary<string, ReplaceDto>()
          tableRowDatas = new List<List<string>>() { new List<string>() { "A", "1", "1500" } }
              .Select(x =>
              {
-                  var row = this.wordTool.CreateRow();
-                  x.ForEach(item => row.Append(this.wordTool.CreateCell(item)));
+                  var row = this.docTool.Word.CreateRow();
+                  x.ForEach(item => row.Append(this.docTool.Word.CreateCell(item)));
                   return row;
              }).ToList()
      }
@@ -62,7 +62,7 @@ var replaceData = new Dictionary<string, ReplaceDto>()
 ```c#
 public FileObj WordReplaceTag(FileObj fileData, Dictionary<string, ReplaceDto> replaceData)
 {
-     fileData = wordTool
+     fileData = docTool.Word
         .ReplaceTag($"{fileData.fileName}.{fileData.fileType}", fileData.fileByteArr, replaceData)
         .GetData();
     return fileData;
@@ -75,7 +75,7 @@ public FileObj WordReplaceTag(FileObj fileData, Dictionary<string, ReplaceDto> r
 ```c#
 public FileObj WordToPdf(FileObj fileData)
 {
-    fileData = wordTool
+    fileData = docTool.Word
         .ToPDF($"{fileData.fileName}.{fileData.fileType}", fileData.fileByteArr)
         .GetData();
     return fileData;
