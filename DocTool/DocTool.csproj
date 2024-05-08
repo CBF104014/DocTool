@@ -45,6 +45,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,11 +57,15 @@
   <ItemGroup>
     <Compile Include="Base\DocBase.cs" />
     <Compile Include="Base\IDocBase.cs" />
+    <Compile Include="DocType\DocHTML.cs" />
+    <Compile Include="DocType\DocTableCellPrpo.cs" />
+    <Compile Include="DocType\DocTableRow.cs" />
     <Compile Include="Dto\FileObj.cs" />
     <Compile Include="Dto\ReplaceDto.cs" />
     <Compile Include="Pdf\DocPdfTool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SampleCode\SampleCode1.cs" />
+    <Compile Include="DocType\DocImage.cs" />
+    <Compile Include="DocType\DocTable.cs" />
     <Compile Include="Tool.cs" />
     <Compile Include="Word\DocWordTool.cs" />
   </ItemGroup>

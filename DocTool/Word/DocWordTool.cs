@@ -4,24 +4,19 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml;
 using System;
 using System.Collections.Generic;
-using System.IO.Packaging;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
-using A = DocumentFormat.OpenXml.Drawing;
-using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
-using DocumentFormat.OpenXml.Experimental;
 using DocTool.Base;
+using DocTool.DocType;
 
 namespace DocTool.Word
 {
 
     public class DocWordTool : DocBase
     {
-        private int _imageCounter { get; set; } = 0;
         public DocWordTool(string libreOfficeAppPath, string locationTempPath) : base(libreOfficeAppPath, locationTempPath)
         {
         }
@@ -41,27 +36,10 @@ namespace DocTool.Word
             DocConvert(fileNameWithExtension, inputBytes, fileExtensionType.pdf);
             return this;
         }
-        public Table ToXMLTable(List<string> tableHead, List<List<string>> tableRows)
+        public DocWordTool ToPDF(FileObj fileObjData)
         {
-            var table = CreateTable();
-            var row = CreateRow();
-            foreach (var item in tableHead)
-            {
-                var cell = CreateCell(item, isBold: true);
-                row.Append(cell);
-            }
-            table.Append(row);
-            foreach (var rowItem in tableRows)
-            {
-                row = CreateRow();
-                foreach (var item in rowItem)
-                {
-                    var cell = CreateCell(item, isBold: true);
-                    row.Append(cell);
-                }
-                table.Append(row);
-            }
-            return table;
+            DocConvert($"{fileObjData.fileName}.{fileObjData.fileType}", fileObjData.fileByteArr, fileExtensionType.pdf);
+            return this;
         }
         public DocWordTool HtmlToDocx(string htmlBosyStr)
         {
@@ -84,7 +62,79 @@ namespace DocTool.Word
             }
             return this;
         }
-        public DocWordTool ReplaceTag(string fileNameWithExtension, byte[] inputBytes, Dictionary<string, ReplaceDto> replaceDatas)
+        public class ReplaceObj
+        {
+            public Type PropType { get; set; }
+            public object Value { get; set; }
+        }
+        /// <summary>
+        /// 創立表格
+        /// </summary>
+        /// <param name="tableWidthCM">欄位公分加總</param>
+        public DocTable CreateTable(double tableWidthCM = 0)
+        {
+            var table = new DocTable();
+            var tableProperties = new TableProperties(
+                new TableBorders(
+                    new TopBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
+                    new BottomBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
+                    new LeftBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
+                    new RightBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
+                    new InsideHorizontalBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
+                    new InsideVerticalBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 }
+                )
+            //new TableLayout { Type = TableLayoutValues.Autofit },
+            );
+            //表格指定寬度
+            if (tableWidthCM > 0)
+            {
+                tableProperties.Append(new TableWidth() { Width = DocTable.CMToDXA(tableWidthCM), Type = TableWidthUnitValues.Dxa });
+            }
+            table.AppendChild(tableProperties);
+            return table;
+        }
+        Dictionary<string, ReplaceObj> ToPropDictionary(object obj)
+        {
+            var dictionary = new Dictionary<string, ReplaceObj>();
+            var type = obj.GetType();
+            foreach (var property in type.GetProperties())
+            {
+                string propertyName = property.Name;
+                //object propertyValue = property.GetValue(obj);
+                dictionary.Add(propertyName, new ReplaceObj()
+                {
+                    PropType = property.PropertyType,
+                    Value = property.GetValue(obj),
+                });
+            }
+
+            return dictionary;
+        }
+        public DocWordTool ReplaceTag<T>(string fileNameWithExtension, byte[] inputBytes, T replaceData)
+        {
+            //讀取
+            using (var newDocMS = new MemoryStream())
+            {
+                using (var oriDocMS = new MemoryStream(inputBytes))
+                {
+                    //複製
+                    oriDocMS.CopyTo(newDocMS);
+                }
+                using (var doc = WordprocessingDocument.Open(newDocMS, true))
+                {
+                    DocReplace(doc, ToPropDictionary(replaceData));
+                    doc.Save();
+                    this.fileData = new FileObj()
+                    {
+                        fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
+                        fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                        fileByteArr = newDocMS.ToArray(),
+                    };
+                }
+            }
+            return this;
+        }
+        public DocWordTool ReplaceTag(string fileNameWithExtension, byte[] inputBytes, Dictionary<string, ReplaceObj> replaceDatas)
         {
             //讀取
             using (var newDocMS = new MemoryStream())
@@ -108,23 +158,15 @@ namespace DocTool.Word
             }
             return this;
         }
-
-        private void DocReplace(WordprocessingDocument doc, Dictionary<string, ReplaceDto> replaceDatas)
+        private void DocReplace(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas)
         {
-            //第一次渲染
-            HighlightReplace(doc, replaceDatas,
-                doc.MainDocumentPart.Document.Descendants<Run>()
-                .Concat(doc.MainDocumentPart.HeaderParts.SelectMany(h => h.Header.Descendants<Run>()))
-                .Concat(doc.MainDocumentPart.FooterParts.SelectMany(f => f.Footer.Descendants<Run>()))
-                .Where(x => x.RunProperties?.Elements<Highlight>().Any() ?? false));
-            //第二次渲染(表格內的)
-            HighlightReplace(doc, replaceDatas,
-                doc.MainDocumentPart.Document.Descendants<Run>()
-                .Concat(doc.MainDocumentPart.HeaderParts.SelectMany(h => h.Header.Descendants<Run>()))
-                .Concat(doc.MainDocumentPart.FooterParts.SelectMany(f => f.Footer.Descendants<Run>()))
-                .Where(x => x.RunProperties?.Elements<Highlight>().Any() ?? false));
+            //渲染
+            HighlightReplace(doc, replaceDatas, doc.MainDocumentPart.Document.Descendants<Run>()
+                    .Concat(doc.MainDocumentPart.HeaderParts.SelectMany(h => h.Header.Descendants<Run>()))
+                    .Concat(doc.MainDocumentPart.FooterParts.SelectMany(f => f.Footer.Descendants<Run>()))
+                    .Where(x => x.RunProperties?.Elements<Highlight>().Any() ?? false));
         }
-        private void HighlightReplace(WordprocessingDocument doc, Dictionary<string, ReplaceDto> replaceDatas, IEnumerable<Run> docHighlightRuns)
+        private void HighlightReplace(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas, IEnumerable<Run> docHighlightRuns)
         {
             var tempPool = new List<Run>();
             var matchText = string.Empty;
@@ -152,54 +194,129 @@ namespace DocTool.Word
                         if (firstRun.RunProperties == null)
                             continue;
                         firstRun.RunProperties.RemoveAllChildren<Highlight>();
-                        var keyObj = replaceDatas[key];
+                        var keyProp = replaceDatas[key];
+                        var isRemove = true;
                         //用型態區分
-                        switch (keyObj.replaceType)
+                        if (keyProp.PropType == typeof(DocTable))
                         {
-                            case ReplaceType.Table:
-                                {
-                                    AppendTableToElement(keyObj.tableData, firstRun);
-                                    break;
-                                }
-                            case ReplaceType.Image:
-                                {
-                                    _imageCounter++;
-                                    AppendImageToElement(keyObj, firstRun, doc);
-                                    break;
-                                }
-                            case ReplaceType.HtmlString:
-                                {
-                                    AppendHTMLToElement(keyObj.htmlStr, firstRun);
-                                    break;
-                                }
-                            case ReplaceType.TableRow:
-                                {
-                                    AppendTableRowToElement(keyObj.tableRowDatas, firstRun);
-                                    break;
-                                }
-                            default:
-                                {
-                                    var firstLine = true;
-                                    foreach (var line in Regex.Split(keyObj.textStr, @"\\n"))
-                                    {
-                                        if (firstLine) firstLine = false;
-                                        else firstRun.Append(new Break());
-                                        firstRun.Append(new Text(line));
-                                    }
-                                    break;
-                                }
+                            AppendTableToElement((DocTable)keyProp.Value, firstRun, doc);
                         }
-                        tempPool.Skip(1).ToList().ForEach(o => o.Remove());
+                        else if (keyProp.PropType == typeof(DocImage))
+                        {
+                            AppendImageToElement((DocImage)keyProp.Value, firstRun, doc);
+                        }
+                        else if (keyProp.PropType == typeof(DocHTML))
+                        {
+                            AppendHTMLToElement((DocHTML)keyProp.Value, firstRun);
+                        }
+                        else if (keyProp.PropType == typeof(DocTableRow))
+                        {
+                            isRemove = false;
+                            AppendTableRowToElement((DocTableRow)keyProp.Value, firstRun);
+                        }
+                        else
+                        {
+                            var firstLine = true;
+                            foreach (var line in Regex.Split(keyProp.Value.ToString(), @"\\n"))
+                            {
+                                if (firstLine) firstLine = false;
+                                else firstRun.Append(new Break());
+                                firstRun.Append(new Text(line));
+                            }
+                        }
+                        if (isRemove)
+                            tempPool.Skip(1).ToList().ForEach(o => o.Remove());
                     }
                 }
             }
 
         }
-        private void AppendTableRowToElement(List<TableRow> tableRowDatas, OpenXmlElement element)
+        //private TableCell CreateTableCell(string text, int gridSpan)
+        //{
+        //    TableCell cell = new TableCell(new Paragraph(new Run(new Text(text))));
+        //    TableCellProperties cellProp = new TableCellProperties(new GridSpan { Val = gridSpan });
+        //    cell.AppendChild(cellProp);
+        //    return cell;
+        //}
+        private void AppendTableToElement(DocTable tableData, OpenXmlElement element, WordprocessingDocument doc)
+        {
+            if (tableData != null)
+            {
+                if (tableData.DocImageDict.Any())
+                {
+                    foreach (var cell in tableData.Descendants<TableCell>())
+                    {
+                        if (cell.Descendants<Highlight>().Any())
+                        {
+                            foreach (var run in cell.Descendants<Run>())
+                            {
+                                foreach (var text in run.Descendants<Text>())
+                                {
+                                    if (tableData.DocImageDict.ContainsKey(text.Text))
+                                    {
+                                        if (!cell.Descendants<Table>().Any())
+                                        {
+                                            run.RunProperties.RemoveAllChildren<Highlight>();
+                                            run.RemoveAllChildren<Text>();
+                                            AppendImageToElement(tableData.DocImageDict[text.Text], run, doc);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                element.Parent.Append(tableData.CloneNode(true));
+            }
+        }
+        private void AppendImageToElement(DocImage replaceData, OpenXmlElement element, WordprocessingDocument doc)
+        {
+            if (replaceData != null)
+            {
+                var relationshipId = replaceData.FeedImgData(doc);
+                var imgElement = replaceData.GetImageElement(relationshipId);
+                element.Append(imgElement);
+            }
+        }
+        private void AppendHTMLToElement(DocHTML htmlData, OpenXmlElement element)
+        {
+            if (htmlData != null)
+            {
+                //html轉docx
+                var DocxData = new DocWordTool(this.libreOfficeAppPath, this.locationTempPath)
+                    .HtmlToDocx(htmlData.HTMLStr)
+                    .GetData();
+                if (DocxData == null)
+                    return;
+                //讀取
+                using (var newDocMS = new MemoryStream())
+                {
+                    using (var oriDocMS = new MemoryStream(DocxData.fileByteArr))
+                    {
+                        //複製
+                        oriDocMS.CopyTo(newDocMS);
+                    }
+                    using (var htmlDoc = WordprocessingDocument.Open(newDocMS, true))
+                    {
+                        var bodyElement = htmlDoc.MainDocumentPart.Document.Descendants<Body>().FirstOrDefault();
+                        if (bodyElement != null && bodyElement.FirstChild != null)
+                        {
+                            var newContent = bodyElement.FirstChild
+                                .Where(x => x is Run);
+                            foreach (var runItem in newContent)
+                            {
+                                element.Parent.AppendChild(runItem.CloneNode(true));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void AppendTableRowToElement(DocTableRow tableRowDatas, OpenXmlElement element)
         {
             var tempElement = element;
             TableRow currentTableRow = null;
-            while (tempElement != null && !(tempElement is Table))
+            while (tempElement != null && !(tempElement is DocTable) && !(tempElement is Table))
             {
                 tempElement = tempElement.Parent;
                 if (tempElement is TableRow)
@@ -211,185 +328,10 @@ namespace DocTool.Word
             var currentTable = tempElement as Table;
             if (currentTable != null)
             {
-                foreach (var item in tableRowDatas)
+                foreach (var item in tableRowDatas.RowDatas)
                     currentTable.InsertAfter(item, currentTableRow);
                 currentTable.RemoveChild(currentTableRow);
             }
-        }
-        private void AppendHTMLToElement(string htmlBodyStr, OpenXmlElement element)
-        {
-            //html轉docx
-            HtmlToDocx(htmlBodyStr);
-            if (GetData() == null)
-                return;
-            //讀取
-            using (var newDocMS = new MemoryStream())
-            {
-                using (var oriDocMS = new MemoryStream(GetData().fileByteArr))
-                {
-                    //複製
-                    oriDocMS.CopyTo(newDocMS);
-                }
-                using (var doc = WordprocessingDocument.Open(newDocMS, true))
-                {
-                    var bodyElement = doc.MainDocumentPart.Document.Descendants<Body>().FirstOrDefault();
-                    if (bodyElement != null && bodyElement.FirstChild != null)
-                        element.Append(bodyElement.FirstChild.CloneNode(true));
-                }
-            }
-        }
-
-        private void AppendTableToElement(Table table, OpenXmlElement element)
-        {
-            element.Append(table.CloneNode(true));
-        }
-
-        private void AppendImageToElement(ReplaceDto replaceData, OpenXmlElement element, WordprocessingDocument doc)
-        {
-            if (replaceData.imageDpi <= 0)
-                replaceData.imageDpi = 72;
-            var imageUri = new Uri($"/word/media/{replaceData.fileName}{_imageCounter}.{replaceData.fileType}", UriKind.Relative);
-            var packageImagePart = doc.GetPackage().CreatePart(imageUri, $"Image/{replaceData.fileType}", CompressionOption.Normal);
-            packageImagePart.GetStream(FileMode.Open, FileAccess.Write).Write(replaceData.fileByteArr, 0, replaceData.fileByteArr.Length);
-            var documentPackagePart = doc.GetPackage().GetPart(new Uri("/word/document.xml", UriKind.Relative));
-            var imageRelationshipPart = documentPackagePart.Relationships.Create(
-                new Uri($"media/{replaceData.fileName}{_imageCounter}.{replaceData.fileType}", UriKind.Relative),
-                TargetMode.Internal, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
-            var drawing = GetImageElement(imageRelationshipPart.Id, replaceData.fileName, "picture", replaceData.imageWidth, replaceData.imageHeight, replaceData.imageDpi);
-            element.AppendChild(drawing);
-        }
-
-        private Drawing GetImageElement(
-            string imagePartId,
-            string fileName,
-            string pictureName,
-            double width,
-            double height,
-            double ppi)
-        {
-            double englishMetricUnitsPerInch = 914400;
-            double pixelsPerInch = ppi;
-            //calculate size in emu
-            double emuWidth = width * englishMetricUnitsPerInch / pixelsPerInch;
-            double emuHeight = height * englishMetricUnitsPerInch / pixelsPerInch;
-
-            var element = new Drawing(
-                new DW.Inline(
-                    new DW.Extent { Cx = (Int64Value)emuWidth, Cy = (Int64Value)emuHeight },
-                    new DW.EffectExtent { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
-                    new DW.DocProperties { Id = (UInt32Value)1U, Name = pictureName + _imageCounter },
-                    new DW.NonVisualGraphicFrameDrawingProperties(
-                    new A.GraphicFrameLocks { NoChangeAspect = true }),
-                    new A.Graphic(
-                        new A.GraphicData(
-                            new PIC.Picture(
-                                new PIC.NonVisualPictureProperties(
-                                    new PIC.NonVisualDrawingProperties { Id = (UInt32Value)0U, Name = fileName },
-                                    new PIC.NonVisualPictureDrawingProperties()),
-                                new PIC.BlipFill(
-                                    new A.Blip(
-                                        new A.BlipExtensionList(
-                                            new A.BlipExtension { Uri = "{28A0092B-C50C-407E-A947-70E740481C1C}" }))
-                                    {
-                                        Embed = imagePartId,
-                                        CompressionState = A.BlipCompressionValues.Print,
-                                    },
-                                            new A.Stretch(new A.FillRectangle())),
-                                new PIC.ShapeProperties(
-                                    new A.Transform2D(
-                                        new A.Offset { X = 0L, Y = 0L },
-                                        new A.Extents { Cx = (Int64Value)emuWidth, Cy = (Int64Value)emuHeight }),
-                                    new A.PresetGeometry(new A.AdjustValueList())
-                                    {
-                                        Preset = A.ShapeTypeValues.Rectangle
-                                    })))
-                        {
-                            Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture"
-                        }))
-                {
-                    DistanceFromTop = (UInt32Value)0U,
-                    DistanceFromBottom = (UInt32Value)0U,
-                    DistanceFromLeft = (UInt32Value)0U,
-                    DistanceFromRight = (UInt32Value)0U,
-                    EditId = "50D07946"
-                });
-            return element;
-        }
-
-        public Table CreateTable(decimal tableWidth = 100)
-        {
-            var table = new Table();
-            //表格寬度
-            var width = new TableWidth() { Width = $"{tableWidth}%", Type = TableWidthUnitValues.Pct };
-            //表格框線
-            var borders = new TableBorders(
-                new TopBorder() { Val = BorderValues.Single, Color = "000000" },
-                new BottomBorder() { Val = BorderValues.Single, Color = "000000" },
-                new LeftBorder() { Val = BorderValues.Single, Color = "000000" },
-                new RightBorder() { Val = BorderValues.Single, Color = "000000" }
-            );
-            var tableProperties = new TableProperties(borders, width);
-            table.AppendChild(tableProperties);
-            return table;
-        }
-        public TableRow CreateRow()
-        {
-            var row = new TableRow();
-            return row;
-        }
-        public TableCell CreateCell(string cellText, decimal fontSize = 24, bool isBold = false, int rowspan = 1, int colspan = 1)
-        {
-            #region cell
-            var cell = new TableCell();
-            if (rowspan > 1)
-            {
-                cell.AppendChild(new TableCellProperties(new TableCellVerticalAlignment() { Val = TableVerticalAlignmentValues.Center }));
-            }
-
-            if (colspan > 1)
-            {
-                cell.AppendChild(new TableCellProperties(new GridSpan() { Val = colspan }));
-            }
-            cell.AppendChild(new TableCellProperties(new TableCellBorders(
-                new TopBorder() { Val = BorderValues.Single, Color = "000000" },
-                new BottomBorder() { Val = BorderValues.Single, Color = "000000" },
-                new LeftBorder() { Val = BorderValues.Single, Color = "000000" },
-                new RightBorder() { Val = BorderValues.Single, Color = "000000" }
-            )));
-            #endregion
-            #region Paragraph
-            var paragraph = new Paragraph();
-            #endregion
-            #region Run
-            var run = new Run();
-            var runProperties = new RunProperties();
-            runProperties.Append(new RunFonts() { Ascii = "標楷體", HighAnsi = "標楷體", EastAsia = "標楷體" });
-            runProperties.Append(new FontSize() { Val = fontSize.ToString() });
-            if (isBold)
-                runProperties.Append(new Bold());
-            run.Append(runProperties);
-            #endregion
-            #region Text
-            var text = new Text(cellText);
-            #endregion
-            //組合
-            run.Append(text);
-            paragraph.Append(run);
-            cell.Append(paragraph);
-            //TODO:合併問題
-            // rowspan
-            //if (rowspan > 1)
-            //{
-            //    var vMerge = new VerticalMerge() { Val = MergedCellValues.Restart };
-            //    cell.AppendChild(new TableCellProperties(vMerge));
-            //    for (int i = 1; i < rowspan; i++)
-            //    {
-            //        var mergedCell = new TableCell();
-            //        mergedCell.AppendChild(new TableCellProperties(new VerticalMerge() { Val = MergedCellValues.Continue }));
-            //        currentRow.Append(mergedCell);
-            //    }
-            //}
-            return cell;
         }
     }
 }
