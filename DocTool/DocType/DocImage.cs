@@ -8,9 +8,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using A = DocumentFormat.OpenXml.Drawing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocTool.Dto;
-using DocumentFormat.OpenXml.Drawing;
 
 namespace DocTool.DocType
 {
@@ -51,13 +48,7 @@ namespace DocTool.DocType
                 }
             }
         }
-        private const decimal INCH_TO_CM = 2.54M;
-        private const decimal CM_TO_EMU = 360000M;
-        public decimal Width;
-        public decimal Height;
-        public long WidthInEMU => Convert.ToInt64(Width * CM_TO_EMU);
-        public long HeightInEMU => Convert.ToInt64(Height * CM_TO_EMU);
-        public DocImage(string fileName, string fileType, byte[] fileByteArr, double imageDpi = 300, double imageWidth = 0, double imageHeight = 0)
+        public DocImage(string fileName, string fileType, byte[] fileByteArr, double imageDpi = 300, double imageWidth = 50, double imageHeight = 50)
         {
             this.fileName = fileName;
             this.fileType = fileType;
@@ -69,11 +60,11 @@ namespace DocTool.DocType
             if (this.imageDpi < 1)
                 this.imageDpi = 300;
             if (this.imageWidth < 1)
-                this.imageWidth = 150;
+                this.imageWidth = 50;
             if (this.imageHeight < 1)
-                this.imageHeight = 30;
+                this.imageHeight = 50;
         }
-        public DocImage(string filePath, double imageDpi = 72, double imageWidth = 0, double imageHeight = 0)
+        public DocImage(string filePath, double imageDpi = 300, double imageWidth = 50, double imageHeight = 50)
         {
             this.fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
             this.fileType = System.IO.Path.GetExtension(filePath).Substring(1);
@@ -83,11 +74,11 @@ namespace DocTool.DocType
             this.imageWidth = imageWidth;
             this.imageHeight = imageHeight;
             if (imageDpi < 1)
-                this.imageDpi = 72;
+                this.imageDpi = 300;
             if (this.imageWidth < 1)
-                this.imageWidth = 150;
+                this.imageWidth = 50;
             if (this.imageHeight < 1)
-                this.imageHeight = 30;
+                this.imageHeight = 50;
         }
         public Drawing GetImageElement(string relationshipId)
         {
@@ -136,26 +127,6 @@ namespace DocTool.DocType
                     EditId = "50D07946"
                 });
             return imgElement;
-        }
-        public Graphic GetImageGraphic(string relationshipId = "")
-        {
-            double englishMetricUnitsPerInch = 914400;
-            // 設置圖片的寬度和高度
-            long widthEmu = (long)(this.imageWidth * englishMetricUnitsPerInch / this.imageDpi);
-            long heightEmu = (long)(this.imageHeight * englishMetricUnitsPerInch / this.imageDpi);
-            var graphic = new Graphic();
-            graphic.GraphicData = new GraphicData(new PIC.Picture(
-                new PIC.NonVisualPictureProperties(
-                    new PIC.NonVisualDrawingProperties() { Id = 1, Name = this.fileName },
-                    new PIC.NonVisualPictureDrawingProperties()),
-                new PIC.BlipFill(
-                    new A.Blip() { Embed = "rId1", CompressionState = A.BlipCompressionValues.Print },
-                    new A.Stretch(new A.FillRectangle())),
-                new PIC.ShapeProperties(new A.Transform2D(
-                    new A.Offset() { X = 0L, Y = 0L },
-                    new A.Extents() { Cx = widthEmu, Cy = heightEmu }),
-                    new A.PresetGeometry() { Preset = A.ShapeTypeValues.Rectangle })));
-            return graphic;
         }
         public string FeedImgData(WordprocessingDocument doc)
         {

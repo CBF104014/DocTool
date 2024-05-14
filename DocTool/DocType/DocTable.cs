@@ -57,6 +57,7 @@ namespace DocTool.DocType
             }
             else if (cellPrpo.cellObj.GetType() == typeof(DocImage))
             {
+                //二次渲染時處理
                 var image = (DocImage)cellPrpo.cellObj;
                 runProperties.AppendChild(new Highlight() { Val = HighlightColorValues.Yellow });
                 run.Append(runProperties);
@@ -71,6 +72,10 @@ namespace DocTool.DocType
             paragraph.Append(run);
             cell.Append(paragraph);
             var cellProperties = new TableCellProperties();
+            //垂直對齊 TODO:
+            cellProperties.Append(new TableCellVerticalAlignment() { Val = cellPrpo.VAlign });
+            //水平對齊 TODO:
+            cellProperties.Append(new Justification() { Val = cellPrpo.HAlign });
             //寬度
             if (cellPrpo.cellWidthCM > 0)
             {

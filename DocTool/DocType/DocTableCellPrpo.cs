@@ -35,6 +35,19 @@ namespace DocTool.DocType
             this.fontName = "標楷體";
             this.cellWidthCM = 0;
         }
+        public DocTableCellPrpo(object cellObj, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0)
+        {
+            this.cellObj = cellObj == null ? "" : cellObj;
+            this.fontSize = fontSize;
+            this.colSpan = colSpan;
+            this.rowSpan = rowSpan;
+            this.isBold = isBold;
+            this.fontColor = String.IsNullOrEmpty(textColor) ? "000000" : textColor;
+            this.HAlign = JustificationValues.Left;
+            this.VAlign = TableVerticalAlignmentValues.Top;
+            this.fontName = "標楷體";
+            this.cellWidthCM = 0;
+        }
         public object cellObj { get; set; }
         /// <summary>
         /// 字體大小
