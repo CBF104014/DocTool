@@ -56,6 +56,7 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="SampleFile\Word_hightlight測試.docx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DocTool\DocTool.csproj">
@@ -63,8 +64,9 @@
       <Name>DocTool</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="SampleFile\" />
+    <Content Include="SampleFile\barcode.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
