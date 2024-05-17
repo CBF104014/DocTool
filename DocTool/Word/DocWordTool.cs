@@ -261,7 +261,7 @@ namespace DocTool.Word
                         else
                         {
                             var firstLine = true;
-                            foreach (var line in Regex.Split(keyProp.Value.ToString(), @"\\n"))
+                            foreach (var line in Regex.Split((keyProp.Value ?? "").ToString(), @"\\n"))
                             {
                                 if (firstLine) firstLine = false;
                                 else firstRun.Append(new Break());
@@ -375,9 +375,20 @@ namespace DocTool.Word
             var currentTable = tempElement as Table;
             if (currentTable != null)
             {
-                foreach (var item in tableRowData.RowDatas)
-                    currentTable.InsertAfter(item, currentTableRow);
-                currentTable.RemoveChild(currentTableRow);
+                try
+                {
+                    tableRowData.RowDatas.Reverse();
+                    foreach (var item in tableRowData.RowDatas)
+                        currentTable.InsertAfter(item, currentTableRow);
+                    currentTable.RemoveChild(currentTableRow);
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                finally {
+                    tableRowData.RowDatas.Reverse();
+                }
             }
         }
     }
