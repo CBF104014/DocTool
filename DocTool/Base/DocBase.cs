@@ -27,6 +27,10 @@ namespace DocTool.Base
             xls = 402,
         }
         /// <summary>
+        /// 取代時，需要先轉換成docx的副檔名
+        /// </summary>
+        protected List<string> replaceTypeConversion = new List<string>() { $".{fileExtensionType.odt}" };
+        /// <summary>
         /// 是否刪除暫存附件
         /// </summary>
         public bool deleteTempFile { get; set; } = true;
@@ -107,7 +111,7 @@ namespace DocTool.Base
                     }
                 }
                 //轉docx
-                else if (outputType == fileExtensionType.doc || outputType == fileExtensionType.docx || outputType == fileExtensionType.odt)
+                else if (outputType == fileExtensionType.doc || outputType == fileExtensionType.docx)
                 {
                     var acceptTypeDatas = new List<string>()
                     {
@@ -120,6 +124,26 @@ namespace DocTool.Base
                     if (acceptTypeDatas.Contains(fileExtension))
                     {
                         commandArgs.Add("docx");
+                    }
+                    else
+                    {
+                        throw new Exception($"outputType:{outputType}. file extension \"{fileExtension}\" not supported!");
+                    }
+                }
+                //轉odt
+                else if (outputType == fileExtensionType.odt)
+                {
+                    var acceptTypeDatas = new List<string>()
+                    {
+                        $".{fileExtensionType.doc}",
+                        $".{fileExtensionType.docx}",
+                        $".{fileExtensionType.odt}",
+                        $".{fileExtensionType.htm}",
+                        $".{fileExtensionType.html}",
+                    };
+                    if (acceptTypeDatas.Contains(fileExtension))
+                    {
+                        commandArgs.Add("odt");
                     }
                     else
                     {

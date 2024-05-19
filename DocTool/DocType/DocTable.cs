@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
@@ -13,6 +12,42 @@ namespace DocTool.DocType
 {
     public class DocTable : DocumentFormat.OpenXml.Wordprocessing.Table
     {
+        public TableProperties tableProperties { get; set; }
+        /// <summary>
+        /// 創立表格
+        /// </summary>
+        /// <param name="tableWidthCM">欄位公分加總</param>
+        public DocTable(double tableWidthCM = 0, int borderSize = 4, string borderColor = "000000")
+        {
+            var tblBorderSize = new UInt32Value((uint)borderSize);
+            var borderType = BorderValues.Single;
+            this.tableProperties = new TableProperties(
+                new TableBorders(
+                    new TopBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize },
+                    new BottomBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize },
+                    new LeftBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize },
+                    new RightBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize },
+                    new InsideHorizontalBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize },
+                    new InsideVerticalBorder() { Val = borderType, Color = borderColor, Size = tblBorderSize }
+                )
+            //new TableLayout { Type = TableLayoutValues.Autofit },
+            );
+            //表格指定寬度
+            if (tableWidthCM > 0)
+            {
+                this.tableProperties.Append(new TableWidth() { Width = DocTable.CMToDXA(tableWidthCM), Type = TableWidthUnitValues.Dxa });
+            }
+            else
+            {
+                this.tableProperties.Append(new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct });
+            }
+            this.AppendChild(tableProperties);
+        }
+        public DocTable(TableProperties tableProperties)
+        {
+            this.tableProperties = tableProperties;
+            this.AppendChild(tableProperties);
+        }
         /// <summary>
         /// 圖片資源集合
         /// </summary>
@@ -20,10 +55,17 @@ namespace DocTool.DocType
         /// <summary>
         /// 新增欄
         /// </summary>
-        public TableRow CreateRow()
+        public TableRow CreateRow(int rowHeight = 0)
         {
-            var dataRow = new TableRow();
-            return dataRow;
+            var tblRow = new TableRow();
+            if (rowHeight > 0)
+            {
+                var tblRowProperties = new TableRowProperties();
+                var tblRowHeight = new TableRowHeight() { Val = new UInt32Value((uint)rowHeight) };
+                tblRowProperties.Append(tblRowHeight);
+                tblRow.Append(tblRowProperties);
+            }
+            return tblRow;
         }
         /// <summary>
         /// 新增儲存格
@@ -32,6 +74,7 @@ namespace DocTool.DocType
         {
             var cell = new TableCell();
             var paragraph = new Paragraph();
+            var paragraphProd = new ParagraphProperties();
             var run = new Run();
             var runProperties = new RunProperties();
             runProperties.Append(new RunFonts() { Ascii = cellPrpo.fontName });
@@ -69,13 +112,14 @@ namespace DocTool.DocType
                 run.Append(runProperties);
                 run.Append(new Text(cellPrpo.cellObj.ToString()));
             }
+            //水平對齊
+            paragraphProd.Append(new Justification() { Val = cellPrpo.HAlign });
+            paragraph.Append(paragraphProd);
             paragraph.Append(run);
             cell.Append(paragraph);
             var cellProperties = new TableCellProperties();
-            //垂直對齊 TODO:
+            //垂直對齊
             cellProperties.Append(new TableCellVerticalAlignment() { Val = cellPrpo.VAlign });
-            //水平對齊 TODO:
-            cellProperties.Append(new Justification() { Val = cellPrpo.HAlign });
             //寬度
             if (cellPrpo.cellWidthCM > 0)
             {

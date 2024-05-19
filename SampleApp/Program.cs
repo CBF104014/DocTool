@@ -82,7 +82,7 @@ namespace SampleApp
         {
             get
             {
-                var docTable = DocWordTool.CreateTable();
+                var docTable = new DocTable();
                 var dataRow = docTable.CreateRow();
                 var imgData = new DocImage(this.FileImgPath, imageDpi: 300, imageWidth: 600, imageHeight: 100);
                 dataRow.Append(docTable.CreateCell(new DocTableCellPrpo("欄位A")));

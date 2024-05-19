@@ -77,36 +77,6 @@ namespace DocTool.Word
             return this;
         }
         /// <summary>
-        /// 創立表格
-        /// </summary>
-        /// <param name="tableWidthCM">欄位公分加總</param>
-        public static DocTable CreateTable(double tableWidthCM = 0)
-        {
-            var table = new DocTable();
-            var tableProperties = new TableProperties(
-                new TableBorders(
-                    new TopBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
-                    new BottomBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
-                    new LeftBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
-                    new RightBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
-                    new InsideHorizontalBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 },
-                    new InsideVerticalBorder() { Val = BorderValues.Single, Color = "000000", Size = 12 }
-                )
-            //new TableLayout { Type = TableLayoutValues.Autofit },
-            );
-            //表格指定寬度
-            if (tableWidthCM > 0)
-            {
-                tableProperties.Append(new TableWidth() { Width = DocTable.CMToDXA(tableWidthCM), Type = TableWidthUnitValues.Dxa });
-            }
-            else
-            {
-                tableProperties.Append(new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct });
-            }
-            table.AppendChild(tableProperties);
-            return table;
-        }
-        /// <summary>
         /// 物件轉字典
         /// </summary>
         Dictionary<string, ReplaceObj> ToPropDictionary(object obj)
@@ -124,14 +94,37 @@ namespace DocTool.Word
             return dictionary;
         }
         /// <summary>
+        /// 尋找並取代關鍵字-前置處理
+        /// </summary>
+        public bool PreReplaceTag(string fileNameWithExtension, byte[] inputBytes)
+        {
+            //是否須轉檔
+            var isConversion = replaceTypeConversion.Contains(Path.GetExtension(fileNameWithExtension));
+            if (isConversion)
+            {
+                DocConvert(fileNameWithExtension, inputBytes, fileExtensionType.docx);
+            }
+            else
+            {
+                this.fileData = new FileObj()
+                {
+                    fileName = Path.GetFileName(fileNameWithExtension),
+                    fileByteArr = inputBytes,
+                    fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                };
+            }
+            return isConversion;
+        }
+        /// <summary>
         /// 尋找並取代關鍵字(物件)
         /// </summary>
         public DocWordTool ReplaceTag<T>(string fileNameWithExtension, byte[] inputBytes, T replaceData) where T : class
         {
+            var isConversion = PreReplaceTag(fileNameWithExtension, inputBytes);
             //讀取
             using (var newDocMS = new MemoryStream())
             {
-                using (var oriDocMS = new MemoryStream(inputBytes))
+                using (var oriDocMS = new MemoryStream(this.fileData.fileByteArr))
                 {
                     //複製
                     oriDocMS.CopyTo(newDocMS);
@@ -140,12 +133,20 @@ namespace DocTool.Word
                 {
                     DocReplace(doc, ToPropDictionary(replaceData));
                     doc.Save();
-                    this.fileData = new FileObj()
+                    if (isConversion)
                     {
-                        fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
-                        fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
-                        fileByteArr = newDocMS.ToArray(),
-                    };
+                        //轉回odt
+                        DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.odt);
+                    }
+                    else
+                    {
+                        this.fileData = new FileObj()
+                        {
+                            fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
+                            fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                            fileByteArr = newDocMS.ToArray(),
+                        };
+                    }
                 }
             }
             return this;
@@ -155,6 +156,7 @@ namespace DocTool.Word
         /// </summary>
         public DocWordTool ReplaceTag(string fileNameWithExtension, byte[] inputBytes, Dictionary<string, ReplaceObj> replaceDatas)
         {
+            var isConversion = PreReplaceTag(fileNameWithExtension, inputBytes);
             //讀取
             using (var newDocMS = new MemoryStream())
             {
@@ -167,12 +169,20 @@ namespace DocTool.Word
                 {
                     DocReplace(doc, replaceDatas);
                     doc.Save();
-                    this.fileData = new FileObj()
+                    if (isConversion)
                     {
-                        fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
-                        fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
-                        fileByteArr = newDocMS.ToArray(),
-                    };
+                        //轉回odt
+                        DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.odt);
+                    }
+                    else
+                    {
+                        this.fileData = new FileObj()
+                        {
+                            fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
+                            fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                            fileByteArr = newDocMS.ToArray(),
+                        };
+                    }
                 }
             }
             return this;
@@ -291,6 +301,7 @@ namespace DocTool.Word
                         {
                             foreach (var text in run.Descendants<Text>())
                             {
+                                //動態表格內圖片渲染
                                 if (tableData.DocImageDict.ContainsKey(text.Text))
                                 {
                                     if (!cell.Descendants<Table>().Any())
