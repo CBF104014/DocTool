@@ -11,14 +11,54 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using DocTool.Base;
 using DocTool.DocType;
+using DocTool.Pdf;
 
 namespace DocTool.Word
 {
 
     public class DocWordTool : DocBase
     {
+        /// <summary>
+        /// 建構子
+        /// </summary>
+        /// <param name="libreOfficeAppPath">libreOffice路徑</param>
+        /// <param name="locationTempPath">暫存資料夾</param>
         public DocWordTool(string libreOfficeAppPath, string locationTempPath) : base(libreOfficeAppPath, locationTempPath)
         {
+        }
+        /// <summary>
+        /// 設置資料
+        /// </summary>
+        public DocWordTool Set(FileObj fileObjData)
+        {
+            this.fileData = fileObjData;
+            return this;
+        }
+        /// <summary>
+        /// 設置資料
+        /// </summary>
+        public DocWordTool Set(string inputPath)
+        {
+            this.fileData = new FileObj()
+            {
+                fileName = Path.GetFileNameWithoutExtension(inputPath),
+                fileType = Path.GetExtension(inputPath).Substring(1),
+                fileByteArr = File.ReadAllBytes(inputPath),
+            };
+            return this;
+        }
+        /// <summary>
+        /// 設置資料
+        /// </summary>
+        public DocWordTool Set(string fileNameWithExtension, byte[] inputBytes)
+        {
+            this.fileData = new FileObj()
+            {
+                fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
+                fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                fileByteArr = inputBytes,
+            };
+            return this;
         }
         /// <summary>
         /// 轉PDF
@@ -26,30 +66,6 @@ namespace DocTool.Word
         public DocWordTool ToPDF()
         {
             DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.pdf);
-            return this;
-        }
-        /// <summary>
-        /// 轉PDF
-        /// </summary>
-        public DocWordTool ToPDF(string inputPath)
-        {
-            DocConvert(inputPath, fileExtensionType.pdf);
-            return this;
-        }
-        /// <summary>
-        /// 轉PDF
-        /// </summary>
-        public DocWordTool ToPDF(string fileNameWithExtension, byte[] inputBytes)
-        {
-            DocConvert(fileNameWithExtension, inputBytes, fileExtensionType.pdf);
-            return this;
-        }
-        /// <summary>
-        /// 轉PDF
-        /// </summary>
-        public DocWordTool ToPDF(FileObj fileObjData)
-        {
-            DocConvert($"{fileObjData.fileName}.{fileObjData.fileType}", fileObjData.fileByteArr, fileExtensionType.pdf);
             return this;
         }
         /// <summary>
@@ -96,31 +112,22 @@ namespace DocTool.Word
         /// <summary>
         /// 尋找並取代關鍵字-前置處理
         /// </summary>
-        public bool PreReplaceTag(string fileNameWithExtension, byte[] inputBytes)
+        private bool PreReplaceTag()
         {
             //是否須轉檔
-            var isConversion = replaceTypeConversion.Contains(Path.GetExtension(fileNameWithExtension));
+            var isConversion = replaceTypeConversion.Contains($".{this.fileData.fileType}");
             if (isConversion)
             {
-                DocConvert(fileNameWithExtension, inputBytes, fileExtensionType.docx);
-            }
-            else
-            {
-                this.fileData = new FileObj()
-                {
-                    fileName = Path.GetFileName(fileNameWithExtension),
-                    fileByteArr = inputBytes,
-                    fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
-                };
+                DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.docx);
             }
             return isConversion;
         }
         /// <summary>
         /// 尋找並取代關鍵字(物件)
         /// </summary>
-        public DocWordTool ReplaceTag<T>(string fileNameWithExtension, byte[] inputBytes, T replaceData) where T : class
+        public DocWordTool ReplaceTag<T>(T replaceData) where T : class
         {
-            var isConversion = PreReplaceTag(fileNameWithExtension, inputBytes);
+            var isConversion = PreReplaceTag();
             //讀取
             using (var newDocMS = new MemoryStream())
             {
@@ -136,14 +143,14 @@ namespace DocTool.Word
                     if (isConversion)
                     {
                         //轉回odt
-                        DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.odt);
+                        DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.odt);
                     }
                     else
                     {
                         this.fileData = new FileObj()
                         {
-                            fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
-                            fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
+                            fileName = this.fileData.fileName,
+                            fileType = this.fileData.fileType,
                             fileByteArr = newDocMS.ToArray(),
                         };
                     }
@@ -154,13 +161,13 @@ namespace DocTool.Word
         /// <summary>
         /// 尋找並取代關鍵字(字典)
         /// </summary>
-        public DocWordTool ReplaceTag(string fileNameWithExtension, byte[] inputBytes, Dictionary<string, ReplaceObj> replaceDatas)
+        public DocWordTool ReplaceTag(Dictionary<string, ReplaceObj> replaceDatas)
         {
-            var isConversion = PreReplaceTag(fileNameWithExtension, inputBytes);
+            var isConversion = PreReplaceTag();
             //讀取
             using (var newDocMS = new MemoryStream())
             {
-                using (var oriDocMS = new MemoryStream(inputBytes))
+                using (var oriDocMS = new MemoryStream(this.fileData.fileByteArr))
                 {
                     //複製
                     oriDocMS.CopyTo(newDocMS);
@@ -172,16 +179,7 @@ namespace DocTool.Word
                     if (isConversion)
                     {
                         //轉回odt
-                        DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.odt);
-                    }
-                    else
-                    {
-                        this.fileData = new FileObj()
-                        {
-                            fileName = Path.GetFileNameWithoutExtension(fileNameWithExtension),
-                            fileType = Path.GetExtension(fileNameWithExtension).Substring(1),
-                            fileByteArr = newDocMS.ToArray(),
-                        };
+                        DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.odt);
                     }
                 }
             }

@@ -24,10 +24,11 @@ namespace DocTool
             this.locationTempPath = locationTempPath == null ? $@"C:\TEMP" : locationTempPath;
             Init();
         }
-        public void Init()
+        public Tool Init()
         {
             this.Word = new DocWordTool(this.libreOfficeAppPath, this.locationTempPath);
             this.Pdf = new DocPdfTool();
+            return this;
         }
     }
 }

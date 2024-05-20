@@ -21,16 +21,22 @@ namespace SampleApp
         {
             var docData = new MyClass();
             var docTool = new Tool(@"E:\PortableApps\LibreOfficePortable\App\libreoffice\program\soffice.exe", docData.outFilePath);
-            FileObj fileData = null;
             //輸出WORD
-            fileData = docTool.Word
-               .ReplaceTag(docData.FileDocName, System.IO.File.ReadAllBytes(docData.FileDocPath), docData)
-               .GetData();
+            var fileData = docTool.Word
+                .Set(docData.FileDocPath)
+                .ReplaceTag(docData)
+                .GetData();
             System.IO.File.WriteAllBytes(Path.Combine(docData.outFilePath, $"{DateTime.Now.ToString("yyyyMMddHHmmss")}{fileData.fileName}.{fileData.fileType}"), fileData.fileByteArr);
             //輸出PDF
             fileData = docTool.Word
-               .ToPDF(fileData)
-               .GetData();
+                .ToPDF()
+                .GetData();
+            fileData = docTool.Pdf
+                .Set(fileData)
+                .AddText("Word", new PDFText("QAQ", offsetRightX: 80))
+                .AddImage("Word", new PDFImage(docData.FileImgPath, offsetRightX: 150))
+                .SetReadOnly()
+                .GetData();
             System.IO.File.WriteAllBytes(Path.Combine(docData.outFilePath, $"{DateTime.Now.ToString("yyyyMMddHHmmss")}{fileData.fileName}.{fileData.fileType}"), fileData.fileByteArr);
         }
     }
@@ -85,18 +91,18 @@ namespace SampleApp
                 var docTable = new DocTable();
                 var dataRow = docTable.CreateRow();
                 var imgData = new DocImage(this.FileImgPath, imageDpi: 300, imageWidth: 600, imageHeight: 100);
-                dataRow.Append(docTable.CreateCell(new DocTableCellPrpo("欄位A")));
-                dataRow.Append(docTable.CreateCell(new DocTableCellPrpo("欄位B", JustificationValues.Center, TableVerticalAlignmentValues.Center)));
-                dataRow.Append(docTable.CreateCell(new DocTableCellPrpo(imgData, JustificationValues.Center, TableVerticalAlignmentValues.Center, colSpan: 2)));
-                dataRow.Append(docTable.CreateCell(new DocTableCellPrpo("", colSpan: 0)));
+                dataRow.Append(docTable.CreateCell(new DocTableCellProp("欄位A")));
+                dataRow.Append(docTable.CreateCell(new DocTableCellProp("欄位B", JustificationValues.Center, TableVerticalAlignmentValues.Center)));
+                dataRow.Append(docTable.CreateCell(new DocTableCellProp(imgData, JustificationValues.Center, TableVerticalAlignmentValues.Center, colSpan: 2)));
+                dataRow.Append(docTable.CreateCell(new DocTableCellProp("", colSpan: 0)));
                 docTable.Append(dataRow);
                 foreach (var item in base.PDatas)
                 {
                     dataRow = docTable.CreateRow();
-                    dataRow.Append(docTable.CreateCell(new DocTableCellPrpo(item.ProductName)));
-                    dataRow.Append(docTable.CreateCell(new DocTableCellPrpo(item.Quantity.ToString("#,#.##"))));
-                    dataRow.Append(docTable.CreateCell(new DocTableCellPrpo(item.Amount.ToString("#,#.##"))));
-                    dataRow.Append(docTable.CreateCell(new DocTableCellPrpo(item.TotalAmount.ToString("#,#.##"))));
+                    dataRow.Append(docTable.CreateCell(new DocTableCellProp(item.ProductName)));
+                    dataRow.Append(docTable.CreateCell(new DocTableCellProp(item.Quantity.ToString("#,#.##"))));
+                    dataRow.Append(docTable.CreateCell(new DocTableCellProp(item.Amount.ToString("#,#.##"))));
+                    dataRow.Append(docTable.CreateCell(new DocTableCellProp(item.TotalAmount.ToString("#,#.##"))));
                     docTable.Append(dataRow);
                 }
                 return docTable;

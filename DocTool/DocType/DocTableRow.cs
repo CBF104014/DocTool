@@ -19,7 +19,7 @@ namespace DocTool.DocType
                 var rowData = SelfTable.CreateRow();
                 foreach (var cellItem in rowItem)
                 {
-                    rowData.Append(SelfTable.CreateCell(new DocTableCellPrpo(cellItem)));
+                    rowData.Append(SelfTable.CreateCell(new DocTableCellProp(cellItem)));
                 }
                 RowDatas.Add(rowData);
             }

@@ -20,5 +20,17 @@ namespace DocTool.Dto
         /// 附件資料
         /// </summary>
         public byte[] fileByteArr { get; set; }
+        /// <summary>
+        /// 附件名稱+附檔名
+        /// </summary>
+        public string fileNameWithExtension
+        {
+            get
+            {
+                if (!String.IsNullOrEmpty(this.fileName) && !String.IsNullOrEmpty(this.fileType))
+                    return $"{this.fileName}.{this.fileType}";
+                return "";
+            }
+        }
     }
 }

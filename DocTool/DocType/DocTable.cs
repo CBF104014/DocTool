@@ -70,7 +70,7 @@ namespace DocTool.DocType
         /// <summary>
         /// 新增儲存格
         /// </summary>
-        public TableCell CreateCell(DocTableCellPrpo cellPrpo)
+        public TableCell CreateCell(DocTableCellProp cellPrpo)
         {
             var cell = new TableCell();
             var paragraph = new Paragraph();
@@ -146,7 +146,7 @@ namespace DocTool.DocType
             var row = CreateRow();
             foreach (var item in tableHead)
             {
-                var cell = CreateCell(new DocTableCellPrpo(item, JustificationValues.Center, TableVerticalAlignmentValues.Top, isBold: true));
+                var cell = CreateCell(new DocTableCellProp(item, JustificationValues.Center, TableVerticalAlignmentValues.Top, isBold: true));
                 row.Append(cell);
             }
             this.Append(row);
@@ -155,7 +155,7 @@ namespace DocTool.DocType
                 row = CreateRow();
                 foreach (var item in rowItem)
                 {
-                    var cell = CreateCell(new DocTableCellPrpo(item, JustificationValues.Left, TableVerticalAlignmentValues.Top, isBold: false));
+                    var cell = CreateCell(new DocTableCellProp(item, JustificationValues.Left, TableVerticalAlignmentValues.Top, isBold: false));
                     row.Append(cell);
                 }
                 this.Append(row);

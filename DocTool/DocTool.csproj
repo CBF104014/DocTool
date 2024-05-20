@@ -58,8 +58,12 @@
     <Compile Include="Base\DocBase.cs" />
     <Compile Include="Base\IDocBase.cs" />
     <Compile Include="DocType\DocHTML.cs" />
-    <Compile Include="DocType\DocTableCellPrpo.cs" />
+    <Compile Include="DocType\DocTableCellProp.cs" />
     <Compile Include="DocType\DocTableRow.cs" />
+    <Compile Include="DocType\PDFImage.cs" />
+    <Compile Include="DocType\PDFKeywordPosition.cs" />
+    <Compile Include="DocType\PDFText.cs" />
+    <Compile Include="DocType\PDFTextExtractionStrategy.cs" />
     <Compile Include="Dto\FileObj.cs" />
     <Compile Include="Dto\ReplaceObj.cs" />
     <Compile Include="Pdf\DocPdfTool.cs" />
