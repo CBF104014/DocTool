@@ -114,7 +114,8 @@ public FileObj WordReplaceTag()
      var docData = new MyClass();
      //輸出WORD
      var fileData = docTool.Word
-        .ReplaceTag(docData.FileDocName, System.IO.File.ReadAllBytes(docData.FileDocPath), docData)
+        .Set(docData.FileDocPath)
+        .ReplaceTag(docData)
         .GetData();
     return fileData;
 }
@@ -129,7 +130,8 @@ public FileObj WordToPdf(FileObj fileData)
      var docData = new MyClass();
      //輸出PDF
     fileData = docTool.Word
-        .ToPDF(fileData)
+        .Set(docData.FileDocPath)
+        .ToPDF()
         .GetData();
     return fileData;
 }
