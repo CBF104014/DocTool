@@ -107,7 +107,7 @@ public SampleCode1(string libreOfficeAppPath, string locationTempPath)
         }
     }
 ```
->確保文件內的標籤是{$Tag$}並加上highlight樣式，如右圖![tag](https://img.shields.io/badge/-{$YourTag$}-fffd00?style=for-the-badge)  
+>確保文件內的標籤是{$Tag$}並加上指定樣式(Highlight)，如右圖![tag](https://img.shields.io/badge/-{$YourTag$}-fffd00?style=for-the-badge)  
 ```c#
 public FileObj WordReplaceTag()
 {
@@ -115,7 +115,7 @@ public FileObj WordReplaceTag()
      //輸出WORD
      var fileData = docTool.Word
         .Set(docData.FileDocPath)
-        .ReplaceTag(docData)
+        .ReplaceTag<MyClass, Highlight>(docData)
         .GetData();
     return fileData;
 }

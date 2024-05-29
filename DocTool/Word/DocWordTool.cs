@@ -124,8 +124,11 @@ namespace DocTool.Word
         }
         /// <summary>
         /// 尋找並取代關鍵字(物件)
+        /// T1為尋找樣式，可為Highlight
         /// </summary>
-        public DocWordTool ReplaceTag<T>(T replaceData) where T : class
+        public DocWordTool ReplaceTag<T, T1>(T replaceData)
+            where T : class
+            where T1 : OpenXmlElement
         {
             var isConversion = PreReplaceTag();
             //讀取
@@ -138,21 +141,13 @@ namespace DocTool.Word
                 }
                 using (var doc = WordprocessingDocument.Open(newDocMS, true))
                 {
-                    DocReplace(doc, ToPropDictionary(replaceData));
+                    DocReplace<T1>(doc, ToPropDictionary(replaceData));
                     doc.Save();
+                    this.fileData.fileByteArr = newDocMS.ToArray();
                     if (isConversion)
                     {
                         //轉回odt
                         DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.odt);
-                    }
-                    else
-                    {
-                        this.fileData = new FileObj()
-                        {
-                            fileName = this.fileData.fileName,
-                            fileType = this.fileData.fileType,
-                            fileByteArr = newDocMS.ToArray(),
-                        };
                     }
                 }
             }
@@ -160,8 +155,9 @@ namespace DocTool.Word
         }
         /// <summary>
         /// 尋找並取代關鍵字(字典)
+        /// T為尋找樣式，可為Highlight
         /// </summary>
-        public DocWordTool ReplaceTag(Dictionary<string, ReplaceObj> replaceDatas)
+        public DocWordTool ReplaceTag<T>(Dictionary<string, ReplaceObj> replaceDatas) where T : OpenXmlElement
         {
             var isConversion = PreReplaceTag();
             //讀取
@@ -174,8 +170,9 @@ namespace DocTool.Word
                 }
                 using (var doc = WordprocessingDocument.Open(newDocMS, true))
                 {
-                    DocReplace(doc, replaceDatas);
+                    DocReplace<T>(doc, replaceDatas);
                     doc.Save();
+                    this.fileData.fileByteArr = newDocMS.ToArray();
                     if (isConversion)
                     {
                         //轉回odt
@@ -188,13 +185,13 @@ namespace DocTool.Word
         /// <summary>
         /// 取代的主要功能方法
         /// </summary>
-        private void DocReplace(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas)
+        private void DocReplace<T>(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas) where T : OpenXmlElement
         {
             var maxCount = 5;
             var indexCount = 0;
             while (true)
             {
-                var isMapSuccess = HighlightReplace(doc, replaceDatas, GetAllHighlightRuns(doc));
+                var isMapSuccess = StyleReplace<T>(doc, replaceDatas, GetAllStyleRuns<T>(doc));
                 if (!isMapSuccess)
                 {
                     break;
@@ -206,35 +203,35 @@ namespace DocTool.Word
                 indexCount++;
             }
         }
-        private IEnumerable<Run> GetAllHighlightRuns(WordprocessingDocument doc)
+        private IEnumerable<Run> GetAllStyleRuns<T>(WordprocessingDocument doc) where T : OpenXmlElement
         {
-            var highlightRuns = doc.MainDocumentPart.Document
+            var styleRuns = doc.MainDocumentPart.Document
                 .Descendants<Run>()
                 .Concat(doc.MainDocumentPart.HeaderParts.SelectMany(h => h.Header.Descendants<Run>()))
                 .Concat(doc.MainDocumentPart.FooterParts.SelectMany(f => f.Footer.Descendants<Run>()))
-                .Where(x => x.RunProperties?.Elements<Highlight>().Any() ?? false);
-            return highlightRuns;
+                .Where(x => x.RunProperties?.Elements<T>().Any() ?? false);
+            return styleRuns;
         }
         /// <summary>
-        /// 尋找Highlight樣式並取代
+        /// 尋找指定樣式並取代
         /// </summary>
-        private bool HighlightReplace(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas, IEnumerable<Run> docHighlightRuns)
+        private bool StyleReplace<T>(WordprocessingDocument doc, Dictionary<string, ReplaceObj> replaceDatas, IEnumerable<Run> docStyleRuns) where T : OpenXmlElement
         {
             var tempPool = new List<Run>();
             var matchText = string.Empty;
             var isMapSuccess = false;
-            foreach (var highlightRun in docHighlightRuns)
+            foreach (var itemRun in docStyleRuns)
             {
-                var text = highlightRun.InnerText;
+                var text = itemRun.InnerText;
                 if (text.StartsWith(this.prefixStr))
                 {
-                    tempPool = new List<Run>() { highlightRun };
+                    tempPool = new List<Run>() { itemRun };
                     matchText = text;
                 }
                 else
                 {
                     matchText = matchText + text;
-                    tempPool.Add(highlightRun);
+                    tempPool.Add(itemRun);
                 }
                 if (text.EndsWith(this.suffixStr))
                 {
@@ -247,7 +244,7 @@ namespace DocTool.Word
                         firstRun.RemoveAllChildren<Text>();
                         if (firstRun.RunProperties == null)
                             continue;
-                        firstRun.RunProperties.RemoveAllChildren<Highlight>();
+                        firstRun.RunProperties.RemoveAllChildren<T>();
                         var keyProp = replaceDatas[key];
                         //用型態區分
                         if (keyProp.PropType == typeof(DocTable))

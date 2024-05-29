@@ -235,6 +235,24 @@ namespace DocTool.Pdf
             return this;
         }
         /// <summary>
+        /// 設置PDF密碼
+        /// ※注意：鎖定後則不可編輯!!
+        /// </summary>
+        public DocPdfTool SetPassword(string password, string oriPassword = "")
+        {
+            using (var pdfReader = new PdfReader(this.fileData.fileByteArr, Encoding.UTF8.GetBytes(oriPassword)))
+            using (var outStream = new MemoryStream())
+            {
+                PdfReader.unethicalreading = true;
+                using (var stamper = new PdfStamper(pdfReader, outStream))
+                {
+                    stamper.SetEncryption(Encoding.UTF8.GetBytes(password), null, PdfWriter.AllowPrinting, PdfWriter.ENCRYPTION_AES_128);
+                }
+                this.fileData.fileByteArr = outStream.ToArray();
+            }
+            return this;
+        }
+        /// <summary>
         /// 取得附件資料
         /// </summary>
         public FileObj GetData()

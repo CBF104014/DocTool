@@ -24,7 +24,7 @@ namespace SampleApp
             //輸出WORD
             var fileData = docTool.Word
                 .Set(docData.FileDocPath)
-                .ReplaceTag(docData)
+                .ReplaceTag<MyClass, Highlight>(docData)
                 .GetData();
             System.IO.File.WriteAllBytes(Path.Combine(docData.outFilePath, $"{DateTime.Now.ToString("yyyyMMddHHmmss")}{fileData.fileName}.{fileData.fileType}"), fileData.fileByteArr);
             //輸出PDF

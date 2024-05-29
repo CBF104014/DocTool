@@ -150,7 +150,7 @@ namespace DocTool.Base
                         throw new Exception($"outputType:{outputType}. file extension \"{fileExtension}\" not supported!");
                     }
                 }
-                commandArgs.AddRange(new[] { inputPath, "--norestore", "--writer", "--headless", "--outdir", outputFolderPath });
+                commandArgs.AddRange(new[] { $"\"{inputPath}\"", "--norestore", "--writer", "--headless", "--outdir", $"\"{outputFolderPath}\"" });
                 var procStartInfo = new ProcessStartInfo(this.libreOfficeAppPath);
                 procStartInfo.Arguments = String.Join(" ", commandArgs);
                 procStartInfo.RedirectStandardOutput = true;
