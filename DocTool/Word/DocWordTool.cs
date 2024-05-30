@@ -63,9 +63,10 @@ namespace DocTool.Word
         /// <summary>
         /// 轉PDF
         /// </summary>
-        public DocWordTool ToPDF()
+        public DocWordTool ToPDF(bool toPDF = true)
         {
-            DocConvert($"{this.fileData.fileName}.{this.fileData.fileType}", this.fileData.fileByteArr, fileExtensionType.pdf);
+            if (toPDF)
+                DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.pdf);
             return this;
         }
         /// <summary>
@@ -121,6 +122,20 @@ namespace DocTool.Word
                 DocConvert(this.fileData.fileNameWithExtension, this.fileData.fileByteArr, fileExtensionType.docx);
             }
             return isConversion;
+        }
+        /// <summary>
+        /// 尋找並取代關鍵字(物件)(預設Highlight)
+        /// </summary>
+        public DocWordTool ReplaceTag<T>(T replaceData) where T : class
+        {
+            return ReplaceTag<T, Highlight>(replaceData);
+        }
+        /// <summary>
+        /// 尋找並取代關鍵字(字典)(預設Highlight)
+        /// </summary>
+        public DocWordTool ReplaceTag(Dictionary<string, ReplaceObj> replaceDatas)
+        {
+            return ReplaceTag<Highlight>(replaceDatas);
         }
         /// <summary>
         /// 尋找並取代關鍵字(物件)
