@@ -1,7 +1,10 @@
 # DocTool
-使用LibreOffice，將word文件轉pdf以及製作word文件，請先於主機上下載LibreOffice。
+使用OpenXml SDK以及LibreOffice，將word文件轉pdf以及製作word文件，請先於主機上下載LibreOffice。
 範例專案為SampleApp(請設為起始專案)，範例附件為SampleApp專案項下SampleFile位置，可自行複製到C:\TEMP資料夾。
->LibreOffice下載網址：https://zh-tw.libreoffice.org/download/portable-versions/
+>依賴LibreOffice(下載網址：https://zh-tw.libreoffice.org/download/portable-versions/)
+>依賴DocumentFormat.OpenXml 3.0.2
+>依賴iTextSharp 5.5.13.3
+
   
 ### 1.初始化建構
 >libreOfficeAppPath：LibreOffice路徑位置(\LibreOfficePortable\App\libreoffice\program\soffice.exe)  
@@ -70,7 +73,7 @@ public SampleCode1(string libreOfficeAppPath, string locationTempPath)
         {
             get
             {
-                var docTable = DocWordTool.CreateTable();
+                var docTable = new DocTable();
                 var dataRow = docTable.CreateRow();
                 var imgData = new DocImage(this.FileImgPath, imageDpi: 300, imageWidth: 600, imageHeight: 100);
                 dataRow.Append(docTable.CreateCell(new DocTableCellPrpo("欄位A")));
@@ -107,7 +110,7 @@ public SampleCode1(string libreOfficeAppPath, string locationTempPath)
         }
     }
 ```
->確保文件內的標籤是{$Tag$}並加上指定樣式(Highlight)，如右圖![tag](https://img.shields.io/badge/-{$YourTag$}-fffd00?style=for-the-badge)  
+>確保文件內的標籤是{$Tag$}(可指定尋找樣式，預設是Highlight)，如右圖![tag](https://img.shields.io/badge/-{$YourTag$}-fffd00?style=for-the-badge)  
 ```c#
 public FileObj WordReplaceTag()
 {
@@ -115,7 +118,7 @@ public FileObj WordReplaceTag()
      //輸出WORD
      var fileData = docTool.Word
         .Set(docData.FileDocPath)
-        .ReplaceTag<MyClass, Highlight>(docData)
+        .ReplaceTag(docData)
         .GetData();
     return fileData;
 }

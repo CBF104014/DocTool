@@ -22,7 +22,7 @@ namespace DocTool.DocType
             this.fontName = "標楷體";
             this.cellWidthCM = 0;
         }
-        public DocTableCellProp(object cellObj, JustificationValues HAlign, TableVerticalAlignmentValues VAlign, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0)
+        public DocTableCellProp(object cellObj, JustificationValues HAlign, TableVerticalAlignmentValues VAlign, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "")
         {
             this.cellObj = cellObj == null ? "" : cellObj;
             this.fontSize = fontSize;
@@ -34,8 +34,9 @@ namespace DocTool.DocType
             this.VAlign = VAlign == null ? TableVerticalAlignmentValues.Top: VAlign;
             this.fontName = "標楷體";
             this.cellWidthCM = 0;
+            this.bgColor = bgColor;
         }
-        public DocTableCellProp(object cellObj, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0)
+        public DocTableCellProp(object cellObj, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "")
         {
             this.cellObj = cellObj == null ? "" : cellObj;
             this.fontSize = fontSize;
@@ -47,6 +48,7 @@ namespace DocTool.DocType
             this.VAlign = TableVerticalAlignmentValues.Top;
             this.fontName = "標楷體";
             this.cellWidthCM = 0;
+            this.bgColor = bgColor;
         }
         public object cellObj { get; set; }
         /// <summary>

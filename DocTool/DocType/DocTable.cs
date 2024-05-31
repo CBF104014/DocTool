@@ -75,9 +75,12 @@ namespace DocTool.DocType
             var cell = new TableCell();
             var paragraph = new Paragraph();
             var paragraphProd = new ParagraphProperties();
+            //字體
+            paragraphProd.Append(new RunFonts() { Ascii = cellPrpo.fontName, EastAsia = cellPrpo.fontName, HighAnsi = cellPrpo.fontName });
             var run = new Run();
             var runProperties = new RunProperties();
-            runProperties.Append(new RunFonts() { Ascii = cellPrpo.fontName });
+            //字體字型
+            runProperties.Append(new RunFonts() { Ascii = cellPrpo.fontName, EastAsia = cellPrpo.fontName, HighAnsi = cellPrpo.fontName });
             runProperties.Append(new FontSize() { Val = cellPrpo.fontSize.ToString() });
             runProperties.Append(new Color() { Val = cellPrpo.fontColor });
             if (cellPrpo.isBold)
@@ -134,6 +137,11 @@ namespace DocTool.DocType
             if (cellPrpo.rowSpan > 1 || cellPrpo.rowSpan == 0)
             {
                 cellProperties.Append(new VerticalMerge() { Val = cellPrpo.rowSpan > 1 ? MergedCellValues.Restart : MergedCellValues.Continue });
+            }
+            //背景顏色
+            if (!String.IsNullOrEmpty(cellPrpo.bgColor))
+            {
+                cellProperties.Append(new Shading() { Fill = cellPrpo.bgColor });
             }
             cell.Append(cellProperties);
             return cell;
