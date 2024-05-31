@@ -1,9 +1,9 @@
 # DocTool
 使用OpenXml SDK以及LibreOffice，將word文件轉pdf以及製作word文件，請先於主機上下載LibreOffice。
 範例專案為SampleApp(請設為起始專案)，範例附件為SampleApp專案項下SampleFile位置，可自行複製到C:\TEMP資料夾。
->依賴LibreOffice(下載網址：https://zh-tw.libreoffice.org/download/portable-versions/)
->依賴DocumentFormat.OpenXml 3.0.2
->依賴iTextSharp 5.5.13.3
+>依賴LibreOffice(下載網址：https://zh-tw.libreoffice.org/download/portable-versions/)  
+>依賴DocumentFormat.OpenXml 3.0.2  
+>依賴iTextSharp 5.5.13.3  
 
   
 ### 1.初始化建構
