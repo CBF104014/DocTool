@@ -281,7 +281,7 @@ namespace DocTool.Word
                         else
                         {
                             var firstLine = true;
-                            foreach (var line in Regex.Split((keyProp.Value ?? "").ToString(), @"\\n"))
+                            foreach (var line in Regex.Split((keyProp.Value ?? "").ToString(), @"\r?\n"))
                             {
                                 if (firstLine) firstLine = false;
                                 else firstRun.Append(new Break());
