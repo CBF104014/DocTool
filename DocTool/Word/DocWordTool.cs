@@ -278,6 +278,10 @@ namespace DocTool.Word
                         {
                             AppendTableRowToElement((DocTableRow)keyProp.Value, firstRun);
                         }
+                        else if (keyProp.PropType == typeof(DocTableCell))
+                        {
+                            AppendTableCellToElement((DocTableCell)keyProp.Value, firstRun);
+                        }
                         else
                         {
                             var firstLine = true;
@@ -376,7 +380,7 @@ namespace DocTool.Word
             }
         }
         /// <summary>
-        /// 新增表格列到指定表格位置
+        /// 新增多個表格列到指定表格位置(一整欄)
         /// </summary>
         private void AppendTableRowToElement(DocTableRow tableRowData, OpenXmlElement element)
         {
@@ -400,17 +404,85 @@ namespace DocTool.Word
                 {
                     tableRowData.RowDatas.Reverse();
                     foreach (var item in tableRowData.RowDatas)
-                        currentTable.InsertAfter(item, currentTableRow);
+                        currentTable.InsertAfter(item.CloneNode(true), currentTableRow);
                     currentTable.RemoveChild(currentTableRow);
                 }
                 catch (Exception ex)
                 {
                     throw ex;
                 }
-                finally {
+                finally
+                {
                     tableRowData.RowDatas.Reverse();
                 }
             }
+        }
+        /// <summary>
+        /// 新增多個表格儲存格到指定表格位置
+        /// </summary>
+        private void AppendTableCellToElement(DocTableCell tableCellCollectionData, OpenXmlElement element)
+        {
+            var targetCell = FindParentElement<TableCell>(element);
+            var targetRow = FindParentElement<TableRow>(element);
+            if (targetCell == null || targetRow == null)
+                return;
+            int targetCellIndex = 0;
+            int oriCellIndex = 0;
+            var allCellCnt = targetRow.Elements<TableCell>().Count();
+            if (tableCellCollectionData.IsEmptyRemoveRow
+                && (tableCellCollectionData == null || tableCellCollectionData.CellDatas == null || tableCellCollectionData.CellDatas.Count == 0))
+            {
+                //刪除整欄
+                var targetTable = FindParentElement<Table>(element);
+                if (targetTable != null)
+                {
+                    targetTable.RemoveChild(targetRow);
+                }
+            }
+            else
+            {
+                //找cell位置
+                foreach (var cell in targetRow.Elements<TableCell>())
+                {
+                    if (cell == targetCell)
+                    {
+                        break;
+                    }
+                    targetCellIndex++;
+                }
+                //取代
+                for (int i = 0; i < allCellCnt; i++)
+                {
+                    if (i < targetCellIndex)
+                        continue;
+                    if (oriCellIndex + 1 > tableCellCollectionData.CellDatas.Count)
+                        break;
+                    var currentCell = targetRow.Elements<TableCell>().ElementAt(i);
+                    currentCell.RemoveAllChildren();
+                    foreach (var item in tableCellCollectionData.CellDatas[oriCellIndex].Elements<Paragraph>())
+                    {
+                        currentCell.Append(item.CloneNode(true));
+                    }
+                    oriCellIndex++;
+                }
+            }
+        }
+
+        public T FindParentElement<T>(OpenXmlElement element, int maxDeep = 20) where T : OpenXmlElement
+        {
+            var i = 0;
+            while (element != null)
+            {
+                if (i > maxDeep)
+                    break;
+                if (element is T t)
+                {
+                    return t;
+                }
+                element = element.Parent;
+                i++;
+            }
+            return null;
         }
     }
 }

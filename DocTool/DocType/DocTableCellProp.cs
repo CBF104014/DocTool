@@ -9,20 +9,10 @@ namespace DocTool.DocType
 {
     public class DocTableCellProp
     {
-        public DocTableCellProp(object cellObj)
-        {
-            this.cellObj = cellObj == null ? "" : cellObj;
-            this.fontSize = 24;
-            this.colSpan = 1;
-            this.rowSpan = 1;
-            this.isBold = false;
-            this.fontColor = "000000";
-            this.HAlign = JustificationValues.Left;
-            this.VAlign = TableVerticalAlignmentValues.Top;
-            this.fontName = "標楷體";
-            this.cellWidthCM = 0;
-        }
-        public DocTableCellProp(object cellObj, JustificationValues HAlign, TableVerticalAlignmentValues VAlign, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "")
+        /// <summary>
+        /// 建構子1
+        /// </summary>
+        public DocTableCellProp(object cellObj, JustificationValues HAlign, TableVerticalAlignmentValues VAlign, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "", double topMargin = 0, double startMargin = 0, double bottomMargin = 0, double endMargin = 0)
         {
             this.cellObj = cellObj == null ? "" : cellObj;
             this.fontSize = fontSize;
@@ -35,21 +25,40 @@ namespace DocTool.DocType
             this.fontName = "標楷體";
             this.cellWidthCM = 0;
             this.bgColor = bgColor;
-        }
-        public DocTableCellProp(object cellObj, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "")
-        {
-            this.cellObj = cellObj == null ? "" : cellObj;
-            this.fontSize = fontSize;
-            this.colSpan = colSpan;
-            this.rowSpan = rowSpan;
-            this.isBold = isBold;
-            this.fontColor = String.IsNullOrEmpty(textColor) ? "000000" : textColor;
-            this.HAlign = JustificationValues.Left;
-            this.VAlign = TableVerticalAlignmentValues.Top;
-            this.fontName = "標楷體";
-            this.cellWidthCM = 0;
             this.bgColor = bgColor;
+            this.topMargin = topMargin;
+            this.startMargin = startMargin;
+            this.bottomMargin = bottomMargin;
+            this.endMargin = endMargin;
         }
+        /// <summary>
+        /// 建構子2
+        /// </summary>
+        public DocTableCellProp(object cellObj) 
+            : this(cellObj: cellObj,
+                  HAlign: JustificationValues.Left,
+                  VAlign: TableVerticalAlignmentValues.Top,
+                  fontSize: 24)
+        { }
+        /// <summary>
+        /// 建構子3
+        /// </summary>
+        public DocTableCellProp(object cellObj, decimal fontSize = 24, int colSpan = 1, int rowSpan = 1, bool isBold = false, string textColor = "000000", double cellWidthCM = 0, string bgColor = "", double topMargin = 0, double startMargin = 0, double bottomMargin = 0, double endMargin = 0)
+            : this(cellObj: cellObj,
+                  HAlign: JustificationValues.Left,
+                  VAlign: TableVerticalAlignmentValues.Top,
+                  fontSize: fontSize,
+                  colSpan: colSpan,
+                  rowSpan: rowSpan,
+                  isBold: isBold,
+                  textColor: textColor,
+                  cellWidthCM: cellWidthCM,
+                  bgColor: bgColor,
+                  topMargin: topMargin,
+                  startMargin: startMargin,
+                  bottomMargin: bottomMargin,
+                  endMargin: endMargin)
+        { }
         public object cellObj { get; set; }
         /// <summary>
         /// 字體大小
@@ -92,5 +101,21 @@ namespace DocTool.DocType
         /// 背景顏色
         /// </summary>
         public string bgColor { get; set; }
+        /// <summary>
+        /// 上邊界(單位Dxa)
+        /// </summary>
+        public double topMargin { get; set; }
+        /// <summary>
+        /// 左邊界(單位Dxa)
+        /// </summary>
+        public double startMargin { get; set; }
+        /// <summary>
+        /// 下邊界(單位Dxa)
+        /// </summary>
+        public double bottomMargin { get; set; }
+        /// <summary>
+        /// 右邊界(單位Dxa)
+        /// </summary>
+        public double endMargin { get; set; }
     }
 }

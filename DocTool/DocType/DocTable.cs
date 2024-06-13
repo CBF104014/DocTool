@@ -123,6 +123,18 @@ namespace DocTool.DocType
             var cellProperties = new TableCellProperties();
             //垂直對齊
             cellProperties.Append(new TableCellVerticalAlignment() { Val = cellPrpo.VAlign });
+            //邊界
+            var tableCellMargin = new TableCellMargin();
+            if (cellPrpo.topMargin > 0)
+                tableCellMargin.Append(new TopMargin() { Width = cellPrpo.topMargin.ToString(), Type = TableWidthUnitValues.Dxa });
+            if (cellPrpo.startMargin > 0)
+                tableCellMargin.Append(new StartMargin() { Width = cellPrpo.startMargin.ToString(), Type = TableWidthUnitValues.Dxa });
+            if (cellPrpo.bottomMargin > 0)
+                tableCellMargin.Append(new BottomMargin() { Width = cellPrpo.bottomMargin.ToString(), Type = TableWidthUnitValues.Dxa });
+            if (cellPrpo.endMargin > 0)
+                tableCellMargin.Append(new EndMargin() { Width = cellPrpo.endMargin.ToString(), Type = TableWidthUnitValues.Dxa });
+            if (cellPrpo.topMargin > 0 || cellPrpo.startMargin > 0 || cellPrpo.bottomMargin > 0 || cellPrpo.endMargin > 0)
+                cellProperties.Append(tableCellMargin);
             //寬度
             if (cellPrpo.cellWidthCM > 0)
             {
