@@ -16,13 +16,21 @@ namespace DocTool.DocType
         {
             foreach (var rowItem in sourceDatas)
             {
-                var rowData = SelfTable.CreateRow();
+                var rowData = CreateRow();
                 foreach (var cellItem in rowItem)
                 {
-                    rowData.Append(SelfTable.CreateCell(new DocTableCellProp(cellItem)));
+                    rowData.Append(CreateCell(new DocTableCellProp(cellItem)));
                 }
                 RowDatas.Add(rowData);
             }
+        }
+        public TableRow CreateRow(int rowHeight = 0)
+        {
+            return SelfTable.CreateRow(rowHeight);
+        }
+        public TableCell CreateCell(DocTableCellProp cellProp)
+        {
+            return SelfTable.CreateCell(cellProp);
         }
     }
 }

@@ -20,9 +20,13 @@ namespace DocTool.DocType
         {
             foreach (var cellItem in sourceDatas)
             {
-                var cellData = SelfTable.CreateCell(new DocTableCellProp(cellItem));
+                var cellData = CreateCell(new DocTableCellProp(cellItem));
                 CellDatas.Add(cellData);
             }
+        }
+        public TableCell CreateCell(DocTableCellProp cellProp)
+        {
+            return SelfTable.CreateCell(cellProp);
         }
     }
 }

@@ -458,7 +458,7 @@ namespace DocTool.Word
                     if (oriCellIndex + 1 > tableCellCollectionData.CellDatas.Count)
                         break;
                     var currentCell = targetRow.Elements<TableCell>().ElementAt(i);
-                    currentCell.RemoveAllChildren();
+                    currentCell.RemoveAllChildren<Paragraph>();
                     foreach (var item in tableCellCollectionData.CellDatas[oriCellIndex].Elements<Paragraph>())
                     {
                         currentCell.Append(item.CloneNode(true));
