@@ -117,6 +117,33 @@ namespace SampleApp
                 }).ToList());
             }
         }
+        public DocTableRow TableRow2
+        {
+            get
+            {
+                var docRow = new DocTableRow();
+                docRow.RowDatas = new List<TableRow>();
+                //row1
+                var row1 = docRow.CreateRow();
+                row1.Append(docRow.CreateCell(new DocTableCellProp("分類A", rowSpan: 2)));
+                row1.Append(docRow.CreateCell(new DocTableCellProp("A1: 10")));
+                row1.Append(docRow.CreateCell(new DocTableCellProp("100")));
+                docRow.RowDatas.Add(row1);
+                //row2
+                var row2 = docRow.CreateRow();
+                row2.Append(docRow.CreateCell(new DocTableCellProp("", rowSpan: 0)));
+                row2.Append(docRow.CreateCell(new DocTableCellProp("A2: 20")));
+                row2.Append(docRow.CreateCell(new DocTableCellProp("200")));
+                docRow.RowDatas.Add(row2);
+                //total row
+                var row3 = docRow.CreateRow();
+                row3.Append(docRow.CreateCell(new DocTableCellProp($"總計：{this.Total_str}", HAlign: JustificationValues.Right, VAlign: TableVerticalAlignmentValues.Center, colSpan: 3, isBold: true)));
+                row3.Append(docRow.CreateCell(new DocTableCellProp("", colSpan: 0)));
+                row3.Append(docRow.CreateCell(new DocTableCellProp("", colSpan: 0)));
+                docRow.RowDatas.Add(row3);
+                return docRow;
+            }
+        }
         public DocTableCell TableCell1
         {
             get
